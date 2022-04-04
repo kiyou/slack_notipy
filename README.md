@@ -15,14 +15,14 @@ Clone this repository and run `pip install .`:
 
 ``` bash
 $ git clone https://github.com/kiyou/slack_notipy.git
-$ cd ck_edge_maker
+$ cd slack_notipy
 $ pip install .
 ```
 
 or one-liner:
 
 ``` bash
-$ pip install git+https://github.com/kiyou/slack_notipy.git:main
+$ pip install git+https://github.com/kiyou/slack_notipy.git
 ```
 
 To uninstall, use pip:
@@ -48,6 +48,11 @@ $ pip uninstall slack_notipy
 
 
 2. Use
+    - CLI
+    ``` bash
+    slack_notipy "test notification"
+    ```
+
     - Context Manager
 
     ``` python
