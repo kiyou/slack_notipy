@@ -10,6 +10,27 @@ A simple script for sending decorated notifications using Slack Incoming Webhook
 Python3
 - only depends on the Python Standard Libraries: sys, os, json, time, datetime, urllib
 
+## Install
+Clone this repository and run `pip install .`:
+
+``` bash
+$ git clone https://github.com/kiyou/slack_notipy.git
+$ cd ck_edge_maker
+$ pip install .
+```
+
+or one-liner:
+
+``` bash
+$ pip install git+https://github.com/kiyou/slack_notipy.git:main
+```
+
+To uninstall, use pip:
+
+``` bash
+$ pip uninstall slack_notipy
+```
+
 ## Usage
 1. Set environment variable
     - Add following lines in your profile file (e.g. ~/.bash_profile)
