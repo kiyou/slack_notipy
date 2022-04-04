@@ -250,7 +250,7 @@ def cli():
     """
     Command line interface of slack_notipy
     """
-    notify(sys.argv[0], message_type="info", name="python", fields=None, title=None, color=None, footer=None)
+    notify(sys.argv[1], message_type="info", name="slack_notipy:cli", fields=None, title=None, color=None, footer=None)
 
 
 if __name__ == "__main__":
