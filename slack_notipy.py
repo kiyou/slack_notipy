@@ -250,6 +250,8 @@ def cli():
     """
     Command line interface of slack_notipy
     """
+    if SLACK_WEBHOOK_URL is None:
+        raise RuntimeError("SLACK_WEBHOOK_URL is not set.")
     notify(sys.argv[1], message_type="info", name="slack_notipy:cli", fields=None, title=None, color=None, footer=None)
 
 
