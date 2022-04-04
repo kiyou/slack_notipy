@@ -1,10 +1,15 @@
 #!/usr/bin/env python
+# slack_notipy.py
 import sys
 import os
 import time
 import json
 import urllib.request
 import urllib.error
+import hashlib
+from datetime import datetime
+import warnings
+import traceback
 
 colors = {
     "success": "#00bb83",
@@ -27,20 +32,59 @@ priorities = {
     "error": "High",
 }
 
-
 def get_slack_webhook_url(env_slack_webhook_url="SLACK_WEBHOOK_URL"):
-    global slack_webhook_url
+    """
+    get slack_web_hook_url from environmental variable
+
+    parameters
+    --------
+    env_slack_webhook_url : str
+        name of slack_webhook_url environmental variable
+
+    returns
+    ------
+    slack_webhook_url : str
+        slack_webhook_url load from environmental variable
+    """
     slack_webhook_url = os.getenv(env_slack_webhook_url)
     if slack_webhook_url is None:
-        import warnings
-        warnings.warn('Environmental variable \"{}\" is not set. Please set slack_webhook_url'.format(env_slack_webhook_url))
+        warnings.warn(f'Environmental variable {env_slack_webhook_url} is not set. Please set slack_webhook_url')
     return slack_webhook_url
 
+SLACK_WEBHOOK_URL = get_slack_webhook_url(env_slack_webhook_url="SLACK_WEBHOOK_URL")
 
-get_slack_webhook_url()
 
+def notify(message, message_type="info", name="python", fields=None, title=None, color=None, footer=None):
+    """
+    Notify a message
 
-def notify(message, message_type="info", name="python", fields=list(), title=None, color=None, footer=None):
+    parameters
+    --------
+    message : str or dict
+        a message to send
+
+    message_type : str
+        One of "success", "info", "warning", and "error"
+
+    name : str
+        a name of the sender
+
+    fields : None or list
+        fields to include
+
+    title : str
+        title
+
+    color : None or str
+        color
+
+    footer : str
+        footer
+
+    returns
+    ------
+    None : None
+    """
     try:
         if isinstance(message, str):
             message_json = make_message(text=message, name=name, message_type=message_type, title=title, color=color, footer=footer, fields=fields)
@@ -50,31 +94,66 @@ def notify(message, message_type="info", name="python", fields=list(), title=Non
             raise RuntimeError("Bad type of message is given.")
         json_data = json.dumps(message_json).encode("utf-8")
         request_headers = { 'Content-Type': 'application/json; charset=utf-8' }
-        req = urllib.request.Request(url=slack_webhook_url, data=json_data, headers=request_headers, method='POST')
-        res = urllib.request.urlopen(req, timeout=5)
-    except urllib.error.URLError:
-        raise Warning('Could not reach slack server')
+        req = urllib.request.Request(url=SLACK_WEBHOOK_URL, data=json_data, headers=request_headers, method='POST')
+        urllib.request.urlopen(req, timeout=5)
+    except urllib.error.URLError as url_error:
+        raise Warning('Could not reach slack server') from url_error
 
 
-def make_message(text, name="python", message_type="info", title=None, color=None, footer=None, fields=list()):
+def make_message(text, name="python", message_type="info", title=None, color=None, footer=None, fields=None):
+    """
+    Make a message
+
+    parameters
+    --------
+    text : str
+        a text message to send
+
+    name : str
+        a name of the sender
+
+    message_type : str
+        "info"
+
+    title : str
+        title
+
+    color : None or str
+        color
+
+    footer : str
+        footer
+
+    fields : None or list
+        fields to include
+
+    returns
+    ------
+    dictionary
+    """
+
     if title is None:
         title = titles[message_type]
     if color is None:
         color = colors[message_type]
     if footer is None:
-        footer = "Slack API called from python on {}".format(os.uname()[1])
+        footer = f"Slack API called from python on {os.uname()[1]}"
     field_property = {
         "title": "Priority",
         "value": priorities[message_type],
         "short": "true"
     }
+    if fields is None:
+        fields = [field_property, ]
+    else:
+        fields.append(field_property)
     default_attachment = {
-        "fallback": "{} on {}: {}".format(title, os.uname()[1], text),
+        "fallback": f"{title} on {os.uname()[1]}: {text}",
         "color": color,
-        "author_name": "{} on {} (PID: {})".format(name, os.uname()[1], os.getpid()),
+        "author_name": f"{name} on {os.uname()[1]} (PID: {os.getpid()})",
         "title": title,
         "text": text,
-        "fields": fields + [field_property,],
+        "fields": fields,
         "footer": footer,
         "ts": int(time.time())
     }
@@ -82,19 +161,22 @@ def make_message(text, name="python", message_type="info", title=None, color=Non
 
 
 class Notify():
+    """
+    Context manager
+    """
     def __init__(self, name="python", timer=True, error_only=False, send_flag=True):
-        import hashlib
         self.name = name
         self.hash = hashlib.blake2b(repr(self).encode("utf-8"), digest_size=5).hexdigest()
-        self.footer = "slack_notipy context #{}".format(self.hash)
+        self.footer = f"slack_notipy context #{self.hash}"
         self.fields = dict()
         self.timer = timer
         self.error_only = error_only
         self.send_flag = send_flag
+        self.start_time = None
+        self.end_time = None
 
     def __enter__(self):
         if self.timer:
-            from datetime import datetime
             self.start_time = datetime.now()
         if self.error_only or not self.send_flag:
             return self
@@ -106,14 +188,13 @@ class Notify():
         )
         return self
 
-    def __exit__(self, e_type, value, tb):
+    def __exit__(self, exc_type, exc_value, exc_traceback):
         if isinstance(self.fields, dict):
             self.fields = [{"title": str(key), "value": str(value), "short": "true"} for key, value in self.fields.items()]
-        if e_type is None:
+        if exc_type is None:
             if self.error_only or not self.send_flag:
                 return True
             if self.timer:
-                from datetime import datetime
                 self.end_time = datetime.now()
                 self.fields += [
                     {
@@ -130,29 +211,30 @@ class Notify():
                 fields=self.fields
             )
             return True
-        elif isinstance(value, Warning):
-            import traceback
+        elif isinstance(exc_value, Warning):
             notify(
-                "```" + "".join(traceback.format_exception(etype=e_type, value=value, tb=tb)) + "```",
+                "```" + "".join(traceback.format_exception(exc_type, exc_value, exc_traceback)) + "```",
                 message_type="warning",
                 name=self.name,
                 footer=self.footer,
-                fields=self.fields + [{"title": "Error type", "value": str(e_type), "short": "true"}, ]
+                fields=self.fields + [{"title": "Error type", "value": str(exc_type), "short": "true"}, ]
             )
             return False
         else:
-            import traceback
             notify(
-                "```" + "".join(traceback.format_exception(etype=e_type, value=value, tb=tb)) + "```",
+                "```" + "".join(traceback.format_exception(exc_type, exc_value, exc_traceback)) + "```",
                 message_type="error",
                 name=self.name,
                 footer=self.footer,
-                fields=self.fields + [{"title": "Error type", "value": str(e_type), "short": "true"}, ]
+                fields=self.fields + [{"title": "Error type", "value": str(exc_type), "short": "true"}, ]
             )
             return False
 
 
 def context_wrapper(name="python", timer=True, error_only=False):
+    """
+    Context wrapper
+    """
     def _context_wrapper(func):
         def run(*args, **kwargs):
             with Notify(name=name, timer=timer, error_only=error_only) as s:
@@ -165,7 +247,10 @@ def context_wrapper(name="python", timer=True, error_only=False):
 
 
 def cli():
-    notify(sys.argv[0], message_type="info", name="python", fields=list(), title=None, color=None, footer=None)
+    """
+    Command line interface of slack_notipy
+    """
+    notify(sys.argv[0], message_type="info", name="python", fields=None, title=None, color=None, footer=None)
 
 
 if __name__ == "__main__":
@@ -176,7 +261,7 @@ if __name__ == "__main__":
     try:
         d = calc(1, 1)
         d = calc(1, 0)
-    except Exception:
+    except ZeroDivisionError:
         print("Exception called")
 
     try:
@@ -186,5 +271,5 @@ if __name__ == "__main__":
             f.fields = {"result": a}
         with Notify("calc context 2"):
             print(1/0)
-    except Exception:
+    except ZeroDivisionError:
         print("Exception called")
