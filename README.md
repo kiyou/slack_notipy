@@ -9,7 +9,7 @@ A simple script for sending decorated notifications using Slack Incoming Webhook
     - information of Exception if raised
     - duration in the `with` statement
     - a hash of the `with` statement as a footer
-    - Error only mode
+    - notify only when Error is raised
 - CLI command
 
 ## Requirements
@@ -54,7 +54,7 @@ pip uninstall slack_notipy
     echo "SLACK_WEBHOOK_URL=<YOUR SLACK WEBHOOK_URL (https://hooks.slack.com/services/*****/*****)>" > .env
     ```
 
-2. Use
+1. Use
     - CLI
     ``` bash
     slack_notipy "test notification"
