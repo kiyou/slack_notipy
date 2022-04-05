@@ -6,8 +6,10 @@ A simple script for sending decorated notifications using Slack Incoming Webhook
 - Use the hostname and the process id as the sender name
 - Context Manager
     - fields which can notify various output
-    - notifies information of raised Exception
-    - a footer with a hash for each with statement
+    - information of Exception if raised
+    - duration in the `with` statement
+    - a hash of the `with` statement as a footer
+    - Error only mode
 - CLI command
 
 ## Requirements
