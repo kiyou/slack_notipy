@@ -11,26 +11,29 @@ from datetime import datetime
 import traceback
 from dotenv import load_dotenv
 
-colors = {
-    "success": "#00bb83",
-    "info": "#009fbb",
-    "warning": "#ffa32b",
-    "error": "#ff0a54",
+format_dict = {
+    "success": {
+        "title": "Success",
+        "color": "#00bb83",
+        "priority": "Middle",
+    },
+    "info": {
+        "title": "Info",
+        "color": "#009fbb",
+        "priority": "Low",
+    },
+    "warning": {
+        "title": "Warning",
+        "color": "#ffa32b",
+        "priority": "Middle",
+    },
+    "error": {
+        "title": "Error",
+        "color": "#ff0a54",
+        "priority": "High",
+    },
 }
 
-titles = {
-    "success": "Success",
-    "info": "Info",
-    "warning": "Warning",
-    "error": "Error",
-}
-
-priorities = {
-    "success": "Middle",
-    "info": "Low",
-    "warning": "Middle",
-    "error": "High",
-}
 
 def get_slack_webhook_url(env_slack_webhook_url="SLACK_WEBHOOK_URL"):
     """
@@ -38,7 +41,7 @@ def get_slack_webhook_url(env_slack_webhook_url="SLACK_WEBHOOK_URL"):
 
     parameters
     --------
-    env_slack_webhook_url : str
+    env_slack_webhook_url : str, default "SLACK_WEBHOOK_URL"
         name of slack_webhook_url environmental variable
 
     returns
@@ -62,22 +65,22 @@ def notify(message, message_type="info", name="python", fields=None, title=None,
         a message to send
 
     message_type : str
-        One of "success", "info", "warning", and "error"
+        One of "success", "info", "warning", and "error", default "info"
 
     name : str
-        a name of the sender
+        a name of the sender, default "python"
 
     fields : None or list
-        fields to include
+        fields to include, default None
 
     title : str
-        title
+        title, default None
 
     color : None or str
-        color
+        color, default None
 
     footer : str
-        footer
+        footer, default None
 
     returns
     ------
@@ -102,47 +105,47 @@ def notify(message, message_type="info", name="python", fields=None, title=None,
         raise RuntimeError('Could not reach slack server') from url_error
 
 
-def make_message(text, name="python", message_type="info", title=None, color=None, footer=None, fields=None):
+def make_message(text, message_type="info", name="python", fields=None, title=None, color=None, footer=None):
     """
     Make a message
 
     parameters
     --------
-    text : str
-        a text message to send
-
-    name : str
-        a name of the sender
+    message : str or dict
+        a message to send
 
     message_type : str
-        "info"
+        One of "success", "info", "warning", and "error", default "info"
 
-    title : str
-        title
-
-    color : None or str
-        color
-
-    footer : str
-        footer
+    name : str
+        a name of the sender, default "python"
 
     fields : None or list
-        fields to include
+        fields to include, default None
+
+    title : str
+        title, default None
+
+    color : None or str
+        color, default None
+
+    footer : str
+        footer, default None
 
     returns
     ------
-    dictionary
+    dict
     """
 
     if title is None:
-        title = titles[message_type]
+        title = format_dict[message_type]["title"]
     if color is None:
-        color = colors[message_type]
+        color = format_dict[message_type]["color"]
     if footer is None:
         footer = f"Slack API called from python on {os.uname()[1]}"
     field_property = {
         "title": "Priority",
-        "value": priorities[message_type],
+        "value": format_dict[message_type]["priority"],
         "short": "true"
     }
     if fields is None:
