@@ -15,21 +15,21 @@ A simple script for sending decorated notifications using Slack Incoming Webhook
 Clone this repository and run `pip install .`:
 
 ``` bash
-$ git clone https://github.com/kiyou/slack_notipy.git
-$ cd slack_notipy
-$ pip install .
+git clone https://github.com/kiyou/slack_notipy.git
+cd slack_notipy
+pip install .
 ```
 
 or one-liner:
 
 ``` bash
-$ pip install git+https://github.com/kiyou/slack_notipy.git
+pip install git+https://github.com/kiyou/slack_notipy.git
 ```
 
 To uninstall, use pip:
 
 ``` bash
-$ pip uninstall slack_notipy
+pip uninstall slack_notipy
 ```
 
 ## Usage
