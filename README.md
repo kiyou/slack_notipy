@@ -38,6 +38,9 @@ pip uninstall slack_notipy
 ```
 
 ## Usage
+1. Get Slack Webhook URL
+    https://api.slack.com/messaging/webhooks
+
 1. Set environment variable
     - Add following lines in your profile file (e.g. ~/.bash_profile):
 
