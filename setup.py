@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name='slack_notipy',
@@ -16,7 +16,7 @@ setup(
     ],
     keywords='tools',
     install_requires=["python-dotenv",],
-    packages=find_packages(),
+    py_modules=["slack_notipy"],
     entry_points={
         'console_scripts':[
             'slack_notipy = slack_notipy:cli',
