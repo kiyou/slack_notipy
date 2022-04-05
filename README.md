@@ -55,11 +55,6 @@ pip uninstall slack_notipy
     ```
 
 1. Use
-    - CLI
-    ``` bash
-    slack_notipy "test notification"
-    ```
-
     - Context Manager
 
     ``` python
@@ -76,7 +71,6 @@ pip uninstall slack_notipy
         print("Exception called")
     ```
 
-
     - Decorator
 
     ``` python
@@ -91,6 +85,12 @@ pip uninstall slack_notipy
         d = calc(1, 0)
     except ZeroDivisionError:
         print("Exception called")
+    ```
+
+    - CLI on shell environment
+
+    ``` bash
+    slack_notipy "test notification"
     ```
 
 ## Licence
