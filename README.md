@@ -4,7 +4,10 @@ A simple script for sending decorated notifications using Slack Incoming Webhook
 ## Overview
 - Supports hundling exceptions and fields in attachments for slack incoming webhook.
 - Use the hostname and the process id as the sender name
-- Automatically generates a footer with a hash for Context Manager
+- Context Manager
+    - fields which can notify various output
+    - notifies information of raised Exception
+    - a footer with a hash for each with statement
 - CLI command
 
 ## Requirements
