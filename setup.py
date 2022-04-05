@@ -15,7 +15,7 @@ setup(
         "License :: OSI Approved :: MIT License",
     ],
     keywords='tools',
-    install_requires=[],
+    install_requires=["python-dotenv",],
     packages=find_packages(),
     entry_points={
         'console_scripts':[

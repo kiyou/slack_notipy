@@ -8,8 +8,8 @@ A simple script for sending decorated notifications using Slack Incoming Webhook
 - CLI command
 
 ## Requirements
-Python3
-- only depends on the Python Standard Libraries: sys, os, json, time, datetime, urllib
+- Python3
+- python-dotenv
 
 ## Install
 Clone this repository and run `pip install .`:
@@ -34,19 +34,17 @@ $ pip uninstall slack_notipy
 
 ## Usage
 1. Set environment variable
-    - Add following lines in your profile file (e.g. ~/.bash_profile)
+    - Add following lines in your profile file (e.g. ~/.bash_profile):
 
     ``` sh
     export SLACK_WEBHOOK_URL=<YOUR SLACK WEBHOOK_URL (https://hooks.slack.com/services/*****/*****)>
     ```
 
-    - or set at runtime
+    - or prepare `.env` in a runtime directory:
 
-    ``` python
-    import slack_notipy
-    slack_notipy.slack_webhook_url = <YOUR SLACK WEBHOOK_URL (https://hooks.slack.com/services/*****/*****)>
+    ``` sh
+    echo "SLACK_WEBHOOK_URL=<YOUR SLACK WEBHOOK_URL (https://hooks.slack.com/services/*****/*****)>" > .env
     ```
-
 
 2. Use
     - CLI
@@ -66,7 +64,7 @@ $ pip uninstall slack_notipy
             f.fields=[{"title": "result", "value": str(a)}, ]
         with Notify("SlackNotify context 2"):
             print(1/0)
-    except Exception:
+    except ZeroDivisionError:
         print("Exception called")
     ```
 
@@ -83,7 +81,7 @@ $ pip uninstall slack_notipy
     try:
         d = calc(1, 1)
         d = calc(1, 0)
-    except Exception:
+    except ZeroDivisionError:
         print("Exception called")
     ```
 

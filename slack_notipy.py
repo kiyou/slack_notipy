@@ -8,8 +8,8 @@ import urllib.request
 import urllib.error
 import hashlib
 from datetime import datetime
-import warnings
 import traceback
+from dotenv import load_dotenv
 
 colors = {
     "success": "#00bb83",
@@ -48,10 +48,8 @@ def get_slack_webhook_url(env_slack_webhook_url="SLACK_WEBHOOK_URL"):
     """
     slack_webhook_url = os.getenv(env_slack_webhook_url)
     if slack_webhook_url is None:
-        warnings.warn(f'Environmental variable {env_slack_webhook_url} is not set. Please set slack_webhook_url')
+        raise OSError(f'Environment variable {env_slack_webhook_url} is not set. Please set it or prepare .env file and retry.')
     return slack_webhook_url
-
-SLACK_WEBHOOK_URL = get_slack_webhook_url(env_slack_webhook_url="SLACK_WEBHOOK_URL")
 
 
 def notify(message, message_type="info", name="python", fields=None, title=None, color=None, footer=None):
@@ -94,10 +92,14 @@ def notify(message, message_type="info", name="python", fields=None, title=None,
             raise RuntimeError("Bad type of message is given.")
         json_data = json.dumps(message_json).encode("utf-8")
         request_headers = { 'Content-Type': 'application/json; charset=utf-8' }
-        req = urllib.request.Request(url=SLACK_WEBHOOK_URL, data=json_data, headers=request_headers, method='POST')
+        load_dotenv(os.path.join(os.getcwd(), ".env"), verbose=True)
+        url = get_slack_webhook_url(env_slack_webhook_url="SLACK_WEBHOOK_URL")
+        if url is None:
+            raise RuntimeError("SLACK_WEBHOOK_URL is not set.")
+        req = urllib.request.Request(url=url, data=json_data, headers=request_headers, method='POST')
         urllib.request.urlopen(req, timeout=5)
     except urllib.error.URLError as url_error:
-        raise Warning('Could not reach slack server') from url_error
+        raise RuntimeError('Could not reach slack server') from url_error
 
 
 def make_message(text, name="python", message_type="info", title=None, color=None, footer=None, fields=None):
@@ -250,8 +252,6 @@ def cli():
     """
     Command line interface of slack_notipy
     """
-    if SLACK_WEBHOOK_URL is None:
-        raise RuntimeError("SLACK_WEBHOOK_URL is not set.")
     notify(sys.argv[1], message_type="info", name="slack_notipy:cli", fields=None, title=None, color=None, footer=None)
 
 
