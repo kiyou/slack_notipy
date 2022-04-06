@@ -167,15 +167,15 @@ def make_message(text, message_type="info", name="python", fields=None, title=No
 
 class Notify():
     """
-    Context manager
+    Context manager for notification by Slack Incoming Webhook
     """
-    def __init__(self, name="python", timer=True, error_only=False, send_flag=True):
+    def __init__(self, name="python", timer=True, exception_only=False, send_flag=True):
         self.name = name
         self.hash = hashlib.blake2b(repr(self).encode("utf-8"), digest_size=5).hexdigest()
         self.footer = f"slack_notipy context #{self.hash}"
         self.fields = dict()
         self.timer = timer
-        self.error_only = error_only
+        self.exception_only = exception_only
         self.send_flag = send_flag
         self.start_time = None
         self.end_time = None
@@ -183,21 +183,25 @@ class Notify():
     def __enter__(self):
         if self.timer:
             self.start_time = datetime.now()
-        if self.error_only or not self.send_flag:
-            return self
-        notify(
-            "Calculation started.",
-            message_type="info",
-            name=self.name,
-            footer=self.footer
-        )
+        if self.exception_only or not self.send_flag:
+            pass
+        else:
+            notify(
+                "Calculation started.",
+                message_type="info",
+                name=self.name,
+                footer=self.footer
+            )
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         if isinstance(self.fields, dict):
-            self.fields = [{"title": str(key), "value": str(value), "short": "true"} for key, value in self.fields.items()]
+            self.fields = [
+                {"title": str(key), "value": str(value), "short": "true"}
+                for key, value in self.fields.items()
+            ]
         if exc_type is None:
-            if self.error_only or not self.send_flag:
+            if self.exception_only or not self.send_flag:
                 return True
             if self.timer:
                 self.end_time = datetime.now()
@@ -236,13 +240,13 @@ class Notify():
             return False
 
 
-def context_wrapper(name="python", timer=True, error_only=False):
+def context_wrapper(name="python", timer=True, exception_only=False):
     """
     Context wrapper
     """
     def _context_wrapper(func):
         def run(*args, **kwargs):
-            with Notify(name=name, timer=timer, error_only=error_only) as s:
+            with Notify(name=name, timer=timer, exception_only=exception_only) as s:
                 result = func(*args, **kwargs)
                 if isinstance(result, (dict, list)):
                     s.fields = result
