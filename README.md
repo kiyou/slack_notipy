@@ -59,17 +59,31 @@ pip uninstall slack_notipy
     - Context Manager
 
     ``` python
+    # load
     from slack_notipy import Notify
 
+    # using context manager
+    # notifying a value by fields
+    with Notify("context 1") as f:
+        a = sum([i for i in range(1, 101)])
+        f.fields = a
+
+    # notifying multiple values by specifying dictionary to fields
+    with Notify("context 2") as f:
+        formula = "1 + 1"
+        f.fields = {"formula": formula, "results": eval(formula)}
+
+    # notifying Exception and stop
     try:
-        with Notify("SlackNotify context 1") as f:
-            a = sum([i for i in range(1, 101)])
-            print(a)
-            f.fields=[{"title": "result", "value": str(a)}, ]
-        with Notify("SlackNotify context 2"):
-            print(1/0)
+        with Notify("exception in context"):
+            print(1 / 0)
     except ZeroDivisionError:
         print("Exception called")
+
+    # notifying Exception and continue by catch_exception
+    with Notify("catch exception", catch_exception=(ZeroDivisionError,)) as f:
+        print(1 / 0)
+
     ```
 
     - Decorator
@@ -77,12 +91,17 @@ pip uninstall slack_notipy
     ``` python
     from slack_notipy import context_wrapper
 
-    @context_wrapper(name="context_wrapper")
+    # using decorator to notify return value and duration
+    @context_wrapper(name="calc with context wrapper")
     def calc(a, b):
-        c = a/b
-        return c
+        """
+        example calculation
+        """
+        return a + b
+
+    c = calc(1, 1)
+
     try:
-        d = calc(1, 1)
         d = calc(1, 0)
     except ZeroDivisionError:
         print("Exception called")

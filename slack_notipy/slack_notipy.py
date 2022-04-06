@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # slack_notipy.py
-import sys
 import os
 import argparse
 import time
@@ -13,7 +12,7 @@ import traceback
 from dotenv import load_dotenv
 
 
-with open(os.path.join(os.path.dirname(__file__), "config.json"), mode="r") as f:
+with open(os.path.join(os.path.dirname(__file__), "config.json"), mode="r", encoding="utf-8") as f:
     config_dict = json.load(f)
     format_dict = config_dict["format"]
     context_message_dict = config_dict["context_message"]
@@ -199,7 +198,7 @@ class Notify():
                 self.fields = [
                     {"title": "return", "value": str(self.fields), "short": "true"}
                 ]
-            except:
+            except ValueError:
                 self.fields = []
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
@@ -322,7 +321,14 @@ if __name__ == "__main__":
     # using decorator to notify return value and duration
     @context_wrapper(name="calc with context wrapper")
     def calc(a, b):
-        c = a + b
-        return c
+        """
+        example calculation
+        """
+        return a / b
 
-    d = calc(1, 1)
+    c = calc(1, 1)
+
+    try:
+        d = calc(1, 0)
+    except ZeroDivisionError:
+        print("Exception called")
