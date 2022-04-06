@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # slack_notipy.py
+from nis import cat
 import sys
 import os
 import time
@@ -169,7 +170,7 @@ class Notify():
     """
     Context manager for notification by Slack Incoming Webhook
     """
-    def __init__(self, name="python", timer=True, exception_only=False, send_flag=True):
+    def __init__(self, name="python", timer=True, exception_only=False, send_flag=True, notify_start=False, catch_exception=()):
         self.name = name
         self.hash = hashlib.blake2b(repr(self).encode("utf-8"), digest_size=5).hexdigest()
         self.footer = f"slack_notipy context #{self.hash}"
@@ -177,13 +178,15 @@ class Notify():
         self.timer = timer
         self.exception_only = exception_only
         self.send_flag = send_flag
+        self.notify_start = notify_start
         self.start_time = None
         self.end_time = None
+        self.catch_exception = catch_exception
 
     def __enter__(self):
         if self.timer:
             self.start_time = datetime.now()
-        if self.exception_only or not self.send_flag:
+        if self.exception_only or not self.send_flag or not self.notify_start:
             pass
         else:
             notify(
@@ -194,12 +197,27 @@ class Notify():
             )
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_traceback):
+    def set_fields(self, fields=None):
+        """
+        Set and convert fields for notification
+        """
+        if fields is not None:
+            self.fields = fields
         if isinstance(self.fields, dict):
             self.fields = [
                 {"title": str(key), "value": str(value), "short": "true"}
                 for key, value in self.fields.items()
             ]
+        else:
+            try:
+                self.fields = [
+                    {"title": "return", "value": str(self.fields), "short": "true"}
+                ]
+            except:
+                self.fields = []
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.set_fields()
         if exc_type is None:
             if self.exception_only or not self.send_flag:
                 return True
@@ -219,6 +237,19 @@ class Notify():
                 footer=self.footer,
                 fields=self.fields
             )
+            return True
+        elif isinstance(exc_value, self.catch_exception):
+            if self.exception_only:
+                pass
+            else:
+                notify(
+                    "```" + "".join(traceback.format_exception(exc_type, exc_value, exc_traceback)) + "```",
+                    message_type="info",
+                    title="Exception caught",
+                    name=self.name,
+                    footer=self.footer,
+                    fields=self.fields + [{"title": "Exception type", "value": str(exc_type), "short": "true"}, ]
+                )
             return True
         elif isinstance(exc_value, Warning):
             notify(
@@ -240,16 +271,15 @@ class Notify():
             return False
 
 
-def context_wrapper(name="python", timer=True, exception_only=False):
+def context_wrapper(name="python", timer=True, exception_only=False, catch_exception=()):
     """
     Context wrapper
     """
     def _context_wrapper(func):
         def run(*args, **kwargs):
-            with Notify(name=name, timer=timer, exception_only=exception_only) as s:
+            with Notify(name=name, timer=timer, exception_only=exception_only, catch_exception=catch_exception) as s:
                 result = func(*args, **kwargs)
-                if isinstance(result, (dict, list)):
-                    s.fields = result
+                s.fields = result
             return result
         return run
     return _context_wrapper
@@ -263,22 +293,27 @@ def cli():
 
 
 if __name__ == "__main__":
-    @context_wrapper(name="calc with context wrapper")
-    def calc(a, b):
-        c = a/b
-        return c
+    # using context manager
+    # notifying result by fields
+    with Notify("context 1") as f:
+        a = sum([i for i in range(1, 101)])
+        f.fields = a
+
+    # notifying Exception and stop
     try:
-        d = calc(1, 1)
-        d = calc(1, 0)
+        with Notify("context 2"):
+            print(1 / 0)
     except ZeroDivisionError:
         print("Exception called")
 
-    try:
-        with Notify("calc_context 1") as f:
-            a = sum([i for i in range(1, 101)])
-            print(a)
-            f.fields = {"result": a}
-        with Notify("calc context 2"):
-            print(1/0)
-    except ZeroDivisionError:
-        print("Exception called")
+    # notifying Exception and continue by catch_exception
+    with Notify("catch exception", catch_exception=(ZeroDivisionError,)) as f:
+        print(1 / 0)
+
+    # using decorator to notify return value and duration
+    @context_wrapper(name="calc with context wrapper")
+    def calc(a, b):
+        c = a + b
+        return c
+
+    d = calc(1, 1)
