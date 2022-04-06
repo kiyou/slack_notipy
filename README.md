@@ -110,6 +110,22 @@ pip uninstall slack_notipy
     - CLI on shell environment
 
     ``` bash
+    slack_notipy -h
+    # usage: slack_notipy [-h] [--name NAME] [--title TITLE] [--message_type MESSAGE_TYPE] [--color COLOR] [--footer FOOTER] message
+    # 
+    # Sending decorated notifications using Slack Incoming Webhook from Python3
+    # 
+    # positional arguments:
+    #   message               message to send
+    # 
+    # options:
+    #   -h, --help            show this help message and exit
+    #   --name NAME           name of sender, default: slack_notipy:cli
+    #   --title TITLE         title, default: default name corresponding to message type
+    #   --message_type MESSAGE_TYPE
+    #                         message type, default: info
+    #   --color COLOR         color, default: default color scheme corresponding to message type
+    #   --footer FOOTER       footer, default: slack_notipy:cli on [HOSTNAME]Sending decorated notifications using Slack Incoming Webhook from Python3
     slack_notipy "test notification"
     ```
 
