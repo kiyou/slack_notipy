@@ -2,6 +2,7 @@
 # slack_notipy.py
 import sys
 import os
+import argparse
 import time
 import json
 import urllib.request
@@ -268,7 +269,23 @@ def cli():
     """
     Command line interface of slack_notipy
     """
-    notify(sys.argv[1], message_type="info", name="slack_notipy:cli", fields=None, title=None, color=None, footer=None)
+    ap = argparse.ArgumentParser(description="Sending decorated notifications using Slack Incoming Webhook from Python3")
+    ap.add_argument("message", type=str, help="message to send")
+    ap.add_argument("--name", type=str, default="slack_notipy:cli", help="name of sender, default: slack_notipy:cli")
+    ap.add_argument("--title", type=str, default=None, help="title, default: slack_notipy:cli on [HOSTNAME] (PID: [Process ID])")
+    ap.add_argument("--message_type", type=str, default="info", help="message type, default: info")
+    ap.add_argument("--color", type=str, default=None, help="color, default: default color scheme corresponding to message type")
+    ap.add_argument("--footer", type=str, default=f"slack_notipy:cli on {os.uname()[1]}", help="footer, default: slack_notipy:cli on [HOSTNAME]")
+    args = ap.parse_args()
+    notify(
+        args.message,
+        message_type=args.message_type,
+        name=args.name,
+        fields=None,
+        title=args.title,
+        color=args.color,
+        footer=args.footer
+    )
 
 
 if __name__ == "__main__":
