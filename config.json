@@ -1,0 +1,29 @@
+{
+    "format": {
+        "success": {
+            "title": "Success",
+            "color": "#00bb83",
+            "priority": "Middle"
+            },
+        "info": {
+            "title": "Info",
+            "color": "#009fbb",
+            "priority": "Low"
+        },
+        "warning": {
+            "title": "Warning",
+            "color": "#ffa32b",
+            "priority": "Middle"
+        },
+        "error": {
+            "title": "Error",
+            "color": "#ff0a54",
+            "priority": "High"
+        }
+    },
+    "context_message": {
+        "enter": "Context started.",
+        "exit": "Context finished."
+    },
+    "timeout": 5
+}

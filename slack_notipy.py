@@ -12,28 +12,10 @@ from datetime import datetime
 import traceback
 from dotenv import load_dotenv
 
-format_dict = {
-    "success": {
-        "title": "Success",
-        "color": "#00bb83",
-        "priority": "Middle",
-    },
-    "info": {
-        "title": "Info",
-        "color": "#009fbb",
-        "priority": "Low",
-    },
-    "warning": {
-        "title": "Warning",
-        "color": "#ffa32b",
-        "priority": "Middle",
-    },
-    "error": {
-        "title": "Error",
-        "color": "#ff0a54",
-        "priority": "High",
-    },
-}
+with open(os.path.join(os.path.dirname(__file__), "config.json"), mode="r") as f:
+    config_dict = json.load(f)
+    format_dict = config_dict["format"]
+    context_message_dict = config_dict["context_message"]
 
 
 def get_slack_webhook_url(env_slack_webhook_url="SLACK_WEBHOOK_URL"):
@@ -101,7 +83,7 @@ def notify(message, message_type="info", name="python", fields=None, title=None,
         if url is None:
             raise RuntimeError("SLACK_WEBHOOK_URL is not set.")
         req = urllib.request.Request(url=url, data=json_data, headers=request_headers, method='POST')
-        urllib.request.urlopen(req, timeout=5)
+        urllib.request.urlopen(req, timeout=config_dict["timeout"])
     except urllib.error.URLError as url_error:
         raise RuntimeError('Could not reach slack server') from url_error
 
@@ -137,7 +119,6 @@ def make_message(text, message_type="info", name="python", fields=None, title=No
     ------
     dict
     """
-
     if title is None:
         title = format_dict[message_type]["title"]
     if color is None:
@@ -190,7 +171,7 @@ class Notify():
             pass
         else:
             notify(
-                "Calculation started.",
+                context_message_dict["enter"],
                 message_type="info",
                 name=self.name,
                 footer=self.footer
@@ -229,7 +210,7 @@ class Notify():
             if self.exception_only or not self.send_flag:
                 return True
             notify(
-                "Calculation finished.",
+                context_message_dict["exit"],
                 message_type="success",
                 name=self.name,
                 footer=self.footer,
