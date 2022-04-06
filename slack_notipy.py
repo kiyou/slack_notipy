@@ -197,12 +197,10 @@ class Notify():
             )
         return self
 
-    def set_fields(self, fields=None):
+    def _convert_fields(self):
         """
-        Set and convert fields for notification
+        convert fields for notification
         """
-        if fields is not None:
-            self.fields = fields
         if isinstance(self.fields, dict):
             self.fields = [
                 {"title": str(key), "value": str(value), "short": "true"}
@@ -217,19 +215,19 @@ class Notify():
                 self.fields = []
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.set_fields()
+        self._convert_fields()
+        if self.timer:
+            self.end_time = datetime.now()
+            self.fields += [
+                {
+                    "title": "Duration",
+                    "value": str(self.end_time - self.start_time),
+                    "short": "true"
+                },
+            ]
         if exc_type is None:
             if self.exception_only or not self.send_flag:
                 return True
-            if self.timer:
-                self.end_time = datetime.now()
-                self.fields += [
-                    {
-                        "title": "Duration",
-                        "value": str(self.end_time - self.start_time),
-                        "short": "true"
-                    },
-                ]
             notify(
                 "Calculation finished.",
                 message_type="success",
@@ -294,14 +292,19 @@ def cli():
 
 if __name__ == "__main__":
     # using context manager
-    # notifying result by fields
+    # notifying a value by fields
     with Notify("context 1") as f:
         a = sum([i for i in range(1, 101)])
         f.fields = a
 
+    # notifying multiple values by specifying dictionary to fields
+    with Notify("context 2") as f:
+        formula = "1 + 1"
+        f.fields = {"formula": formula, "results": eval(formula)}
+
     # notifying Exception and stop
     try:
-        with Notify("context 2"):
+        with Notify("exception in context"):
             print(1 / 0)
     except ZeroDivisionError:
         print("Exception called")
