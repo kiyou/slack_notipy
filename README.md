@@ -6,8 +6,8 @@ A simple script for sending decorated notifications using Slack Incoming Webhook
 - Default color scheme for each priority level
 - Context Manager for notification:
     - fields which can notify various outputs by passing a dictionary
-    - traceback information of Exception if raised
-    - a flag for notifying only when Error is raised
+    - traceback information of an Exception if raised
+    - a flag for notifying only when an Exception is raised
     - elapsed time to finish the `with` statement
     - a hash of the `with` statement as a footer as identification
 - Decorator for notification
