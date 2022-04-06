@@ -4,6 +4,7 @@ import os
 import argparse
 import time
 import json
+import socket
 import urllib.request
 import urllib.error
 import hashlib
@@ -130,7 +131,7 @@ def make_message(text, message_type="info", name="python", fields=None, title=No
     if color is None:
         color = format_dict[message_type]["color"]
     if footer is None:
-        footer = f"Slack API called from python on {os.uname()[1]}"
+        footer = f"Slack API called from python on {socket.gethostname()}"
     if fields is None:
         fields = []
     if include_priority:
@@ -141,9 +142,9 @@ def make_message(text, message_type="info", name="python", fields=None, title=No
         }
         fields.append(field_property)
     default_attachment = {
-        "fallback": f"{title} on {os.uname()[1]}: {text}",
+        "fallback": f"{title} on {socket.gethostname()}: {text}",
         "color": color,
-        "author_name": f"{name} on {os.uname()[1]} (PID: {os.getpid()})",
+        "author_name": f"{name} on {socket.gethostname()} (PID: {os.getpid()})",
         "title": title,
         "text": text,
         "fields": fields,
@@ -281,7 +282,7 @@ def cli():
     ap.add_argument("--title", type=str, default=None, help="title, default: default name corresponding to message type")
     ap.add_argument("--message_type", type=str, default="info", help="message type, default: info")
     ap.add_argument("--color", type=str, default=None, help="color, default: default color scheme corresponding to message type")
-    ap.add_argument("--footer", type=str, default=f"slack_notipy:cli on {os.uname()[1]}", help="footer, default: slack_notipy:cli on [HOSTNAME]")
+    ap.add_argument("--footer", type=str, default=f"slack_notipy:cli on {socket.gethostname()}", help="footer, default: slack_notipy:cli on [HOSTNAME]")
     args = ap.parse_args()
     notify(
         args.message,
