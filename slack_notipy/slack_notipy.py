@@ -161,7 +161,7 @@ class Notify():
     def __init__(self, name="python", timer=True, exception_only=False, send_flag=True, notify_start=False, catch_exception=()):
         self.name = name
         self.hash = hashlib.blake2b(repr(self).encode("utf-8"), digest_size=5).hexdigest()
-        self.footer = f"slack_notipy context #{self.hash}"
+        self.footer = f"slack_notipy context manager #{self.hash}"
         self.fields = dict()
         self.timer = timer
         self.exception_only = exception_only
@@ -264,6 +264,7 @@ def context_wrapper(name="python", timer=True, exception_only=False, catch_excep
     def _context_wrapper(func):
         def run(*args, **kwargs):
             with Notify(name=name, timer=timer, exception_only=exception_only, catch_exception=catch_exception) as s:
+                s.footer = f"slack_notipy decorator #{s.hash}"
                 result = func(*args, **kwargs)
                 s.fields = result
             return result
