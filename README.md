@@ -139,7 +139,7 @@ pip uninstall slack_notipy
         #   --message_type MESSAGE_TYPE
         #                         message type, default: info
         #   --color COLOR         color, default: default color scheme corresponding to message type
-        #   --footer FOOTER       footer, default: slack_notipy:cli on [HOSTNAME]Sending decorated notifications using Slack Incoming Webhook from Python3
+        #   --footer FOOTER       footer, default: slack_notipy:cli on [HOSTNAME]
         slack_notipy "test notification"
         ```
 
