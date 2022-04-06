@@ -18,7 +18,6 @@ setup(
     install_requires=["python-dotenv",],
     py_modules=["slack_notipy"],
     packages=find_packages("."),
-#    package_dir={"": "slack_notipy"},
     include_package_data=True,
     package_data={
         "slack_notipy": ["config.json"]

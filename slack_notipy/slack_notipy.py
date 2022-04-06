@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # slack_notipy.py
-from nis import cat
 import sys
 import os
 import time
@@ -11,6 +10,7 @@ import hashlib
 from datetime import datetime
 import traceback
 from dotenv import load_dotenv
+
 
 with open(os.path.join(os.path.dirname(__file__), "config.json"), mode="r") as f:
     config_dict = json.load(f)
