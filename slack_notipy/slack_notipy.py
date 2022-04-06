@@ -39,7 +39,7 @@ def get_slack_webhook_url(env_slack_webhook_url="SLACK_WEBHOOK_URL"):
     return slack_webhook_url
 
 
-def notify(message, message_type="info", name="python", fields=None, title=None, color=None, footer=None):
+def notify(message, message_type="info", name="python", fields=None, title=None, color=None, footer=None, include_priority=False):
     """
     Notify a message
 
@@ -66,13 +66,16 @@ def notify(message, message_type="info", name="python", fields=None, title=None,
     footer : str
         footer, default None
 
+    include_priority : bool
+        priority, default False
+
     returns
     ------
     None : None
     """
     try:
         if isinstance(message, str):
-            message_json = make_message(text=message, name=name, message_type=message_type, title=title, color=color, footer=footer, fields=fields)
+            message_json = make_message(text=message, name=name, message_type=message_type, title=title, color=color, footer=footer, fields=fields, include_priority=include_priority)
         elif isinstance(message, dict):
             message_json = message
         else:
@@ -89,7 +92,7 @@ def notify(message, message_type="info", name="python", fields=None, title=None,
         raise RuntimeError('Could not reach slack server') from url_error
 
 
-def make_message(text, message_type="info", name="python", fields=None, title=None, color=None, footer=None):
+def make_message(text, message_type="info", name="python", fields=None, title=None, color=None, footer=None, include_priority=False):
     """
     Make a message
 
@@ -116,6 +119,9 @@ def make_message(text, message_type="info", name="python", fields=None, title=No
     footer : str
         footer, default None
 
+    include_priority : bool
+        priority, default False
+
     returns
     ------
     dict
@@ -126,14 +132,14 @@ def make_message(text, message_type="info", name="python", fields=None, title=No
         color = format_dict[message_type]["color"]
     if footer is None:
         footer = f"Slack API called from python on {os.uname()[1]}"
-    field_property = {
-        "title": "Priority",
-        "value": format_dict[message_type]["priority"],
-        "short": "true"
-    }
     if fields is None:
-        fields = [field_property, ]
-    else:
+        fields = []
+    if include_priority:
+        field_property = {
+            "title": "Priority",
+            "value": format_dict[message_type]["priority"],
+            "short": "true"
+        }
         fields.append(field_property)
     default_attachment = {
         "fallback": f"{title} on {os.uname()[1]}: {text}",
@@ -272,7 +278,7 @@ def cli():
     ap = argparse.ArgumentParser(description="Sending decorated notifications using Slack Incoming Webhook from Python3")
     ap.add_argument("message", type=str, help="message to send")
     ap.add_argument("--name", type=str, default="slack_notipy:cli", help="name of sender, default: slack_notipy:cli")
-    ap.add_argument("--title", type=str, default=None, help="title, default: slack_notipy:cli on [HOSTNAME] (PID: [Process ID])")
+    ap.add_argument("--title", type=str, default=None, help="title, default: default name corresponding to message type")
     ap.add_argument("--message_type", type=str, default="info", help="message type, default: info")
     ap.add_argument("--color", type=str, default=None, help="color, default: default color scheme corresponding to message type")
     ap.add_argument("--footer", type=str, default=f"slack_notipy:cli on {os.uname()[1]}", help="footer, default: slack_notipy:cli on [HOSTNAME]")
@@ -284,7 +290,8 @@ def cli():
         fields=None,
         title=args.title,
         color=args.color,
-        footer=args.footer
+        footer=args.footer,
+        include_priority=False,
     )
 
 
