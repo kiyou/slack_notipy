@@ -2,6 +2,7 @@
 A simple script for sending decorated notifications using Slack Incoming Webhook from Python3.
 
 ## Overview
+- Works only with python standard libraries
 - Use the hostname and the process id as the sender name as default
 - Default color scheme for each priority level
 - Context Manager for notification:
@@ -14,8 +15,8 @@ A simple script for sending decorated notifications using Slack Incoming Webhook
 - CLI command
 
 ## Requirements
-- Python3
-- python-dotenv
+- Python3 and its standard libraries
+- python-dotenv (required only when loading `.env`, **not to be installed with this package as dependency**)
 
 ## Install
 Clone this repository and run `pip install .`:
@@ -32,7 +33,7 @@ or one-liner:
 pip install git+https://github.com/kiyou/slack_notipy.git
 ```
 
-To uninstall, use pip:
+To uninstall, use `pip uninstall`:
 
 ``` bash
 pip uninstall slack_notipy
@@ -63,7 +64,10 @@ pip uninstall slack_notipy
         $env:SLACK_WEBHOOK_URL = https://hooks.slack.com/services/*****/*****
         ```
 
-    - Or prepare `.env` in a runtime directory
+    - Or **install `python-dotenv`** and prepare `.env` in a runtime directory
+        ``` sh
+        pip install python-dotenv
+        ```
 
         ``` sh
         echo "SLACK_WEBHOOK_URL=https://hooks.slack.com/services/*****/*****" > .env
