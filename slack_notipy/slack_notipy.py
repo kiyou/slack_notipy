@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 # slack_notipy.py
 import os
-import argparse
-import time
 import json
-import socket
-import urllib.request
-import urllib.error
-import hashlib
+from socket import gethostname
+from urllib.request import Request, urlopen
+from urllib.error import URLError
+from hashlib import blake2b
 from datetime import datetime
-import traceback
-from dotenv import load_dotenv
+from traceback import format_exception
 
 
 with open(os.path.join(os.path.dirname(__file__), "config.json"), mode="r", encoding="utf-8") as f:
@@ -82,13 +79,17 @@ def notify(message, message_type="info", name="python", fields=None, title=None,
             raise RuntimeError("Bad type of message is given.")
         json_data = json.dumps(message_json).encode("utf-8")
         request_headers = { 'Content-Type': 'application/json; charset=utf-8' }
-        load_dotenv(os.path.join(os.getcwd(), ".env"), verbose=True)
+        try:
+            from dotenv import load_dotenv
+            load_dotenv(os.path.join(os.getcwd(), ".env"), verbose=True)
+        except ModuleNotFoundError:
+            pass
         url = get_slack_webhook_url(env_slack_webhook_url="SLACK_WEBHOOK_URL")
         if url is None:
             raise RuntimeError("SLACK_WEBHOOK_URL is not set.")
-        req = urllib.request.Request(url=url, data=json_data, headers=request_headers, method='POST')
-        urllib.request.urlopen(req, timeout=config_dict["timeout"])
-    except urllib.error.URLError as url_error:
+        req = Request(url=url, data=json_data, headers=request_headers, method='POST')
+        urlopen(req, timeout=config_dict["timeout"])
+    except URLError as url_error:
         raise RuntimeError('Could not reach slack server') from url_error
 
 
@@ -131,7 +132,7 @@ def make_message(text, message_type="info", name="python", fields=None, title=No
     if color is None:
         color = format_dict[message_type]["color"]
     if footer is None:
-        footer = f"Slack API called from python on {socket.gethostname()}"
+        footer = f"Slack API called from python on {gethostname()}"
     if fields is None:
         fields = []
     if include_priority:
@@ -142,14 +143,14 @@ def make_message(text, message_type="info", name="python", fields=None, title=No
         }
         fields.append(field_property)
     default_attachment = {
-        "fallback": f"{title} on {socket.gethostname()}: {text}",
+        "fallback": f"{title} on {gethostname()}: {text}",
         "color": color,
-        "author_name": f"{name} on {socket.gethostname()} (PID: {os.getpid()})",
+        "author_name": f"{name} on {gethostname()} (PID: {os.getpid()})",
         "title": title,
         "text": text,
         "fields": fields,
         "footer": footer,
-        "ts": int(time.time())
+        "ts": int(datetime.now().timestamp())
     }
     return {"attachments": [default_attachment,]}
 
@@ -160,7 +161,7 @@ class Notify():
     """
     def __init__(self, name="python", timer=True, exception_only=False, send_flag=True, notify_start=False, catch_exception=()):
         self.name = name
-        self.hash = hashlib.blake2b(repr(self).encode("utf-8"), digest_size=5).hexdigest()
+        self.hash = blake2b(repr(self).encode("utf-8"), digest_size=5).hexdigest()
         self.footer = f"slack_notipy context manager #{self.hash}"
         self.fields = dict()
         self.timer = timer
@@ -229,7 +230,7 @@ class Notify():
                 pass
             else:
                 notify(
-                    "```" + "".join(traceback.format_exception(exc_type, exc_value, exc_traceback)) + "```",
+                    "```" + "".join(format_exception(exc_type, exc_value, exc_traceback)) + "```",
                     message_type="info",
                     title="Exception caught",
                     name=self.name,
@@ -239,7 +240,7 @@ class Notify():
             return True
         elif isinstance(exc_value, Warning):
             notify(
-                "```" + "".join(traceback.format_exception(exc_type, exc_value, exc_traceback)) + "```",
+                "```" + "".join(format_exception(exc_type, exc_value, exc_traceback)) + "```",
                 message_type="warning",
                 name=self.name,
                 footer=self.footer,
@@ -248,7 +249,7 @@ class Notify():
             return False
         else:
             notify(
-                "```" + "".join(traceback.format_exception(exc_type, exc_value, exc_traceback)) + "```",
+                "```" + "".join(format_exception(exc_type, exc_value, exc_traceback)) + "```",
                 message_type="error",
                 name=self.name,
                 footer=self.footer,
@@ -276,13 +277,14 @@ def cli():
     """
     Command line interface of slack_notipy
     """
+    import argparse
     ap = argparse.ArgumentParser(description="Sending decorated notifications using Slack Incoming Webhook from Python3")
     ap.add_argument("message", type=str, help="message to send")
     ap.add_argument("--name", type=str, default="slack_notipy:cli", help="name of sender, default: slack_notipy:cli")
     ap.add_argument("--title", type=str, default=None, help="title, default: default name corresponding to message type")
     ap.add_argument("--message_type", type=str, default="info", help="message type, default: info")
     ap.add_argument("--color", type=str, default=None, help="color, default: default color scheme corresponding to message type")
-    ap.add_argument("--footer", type=str, default=f"slack_notipy:cli on {socket.gethostname()}", help="footer, default: slack_notipy:cli on [HOSTNAME]")
+    ap.add_argument("--footer", type=str, default=f"slack_notipy:cli on {gethostname()}", help="footer, default: slack_notipy:cli on [HOSTNAME]")
     args = ap.parse_args()
     notify(
         args.message,
