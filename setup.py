@@ -15,8 +15,13 @@ setup(
         "License :: OSI Approved :: MIT License",
     ],
     keywords='tools',
-    install_requires=[],
-    packages=find_packages(),
+    install_requires=["python-dotenv",],
+    py_modules=["slack_notipy"],
+    packages=find_packages("."),
+    include_package_data=True,
+    package_data={
+        "slack_notipy": ["config.json"]
+    },
     entry_points={
         'console_scripts':[
             'slack_notipy = slack_notipy:cli',

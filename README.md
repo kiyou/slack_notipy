@@ -2,63 +2,150 @@
 A simple script for sending decorated notifications using Slack Incoming Webhook from Python3.
 
 ## Overview
-- Supports hundling exceptions and fields in attachments for slack incoming webhook.
-- Use the hostname and the process id as the sender name
-- Automatically generates a footer with a hash for Context Manager
+- Works only with python standard libraries
+- Use the hostname and the process id as the sender name as default
+- Default color scheme for each priority level
+- Context Manager for notification:
+    - fields which can notify various outputs by passing a dictionary
+    - traceback information of an Exception if raised
+    - a flag for notifying only when an Exception is raised
+    - elapsed time to finish the `with` statement
+    - a hash of the `with` statement as a footer as identification
+- Decorator for notification
+- CLI command
 
 ## Requirements
-Python3
-- only depends on the Python Standard Libraries: sys, os, json, time, datetime, urllib
+- Python3 and its standard libraries
+- python-dotenv (required only when loading `.env`, **not to be installed with this package as dependency**)
+
+## Install
+Clone this repository and run `pip install .`:
+
+``` bash
+git clone https://github.com/kiyou/slack_notipy.git
+cd slack_notipy
+pip install .
+```
+
+or one-liner:
+
+``` bash
+pip install git+https://github.com/kiyou/slack_notipy.git
+```
+
+To uninstall, use `pip uninstall`:
+
+``` bash
+pip uninstall slack_notipy
+```
 
 ## Usage
-1. Set environment variable
-    - Add following lines in your profile file (e.g. ~/.bash_profile)
+1. Get Slack Webhook URL
 
-    ``` sh
-    export SLACK_WEBHOOK_URL=<YOUR SLACK WEBHOOK_URL (https://hooks.slack.com/services/*****/*****)>
-    ```
+    https://api.slack.com/messaging/webhooks
 
-    - or set at runtime
+1. Set environment variable `SLACK_WEBHOOK_URL`
+    - Linux
 
-    ``` python
-    import slack_notipy
-    slack_notipy.slack_webhook_url = <YOUR SLACK WEBHOOK_URL (https://hooks.slack.com/services/*****/*****)>
-    ```
+        ``` sh
+        # Run following line or append it in your profile file (e.g. ~/.bash_profile)
+        export SLACK_WEBHOOK_URL=https://hooks.slack.com/services/*****/*****
+        ```
 
+    - Command Prompt on Windows
 
-2. Use
+        ``` cmd
+        set SLACK_WEBHOOK_URL=https://hooks.slack.com/services/*****/*****
+        ```
+
+    - Power Shell on Windows
+
+        ``` powershell
+        $env:SLACK_WEBHOOK_URL = https://hooks.slack.com/services/*****/*****
+        ```
+
+    - Or **install `python-dotenv`** and prepare `.env` in a runtime directory
+        ``` sh
+        pip install python-dotenv
+        ```
+
+        ``` sh
+        echo "SLACK_WEBHOOK_URL=https://hooks.slack.com/services/*****/*****" > .env
+        ```
+
+1. Use
     - Context Manager
 
-    ``` python
-    from slack_notipy import Notify
+        ``` python
+        # load
+        from slack_notipy import Notify
 
-    try:
-        with Notify("SlackNotify context 1") as f:
+        # using context manager
+        # notifying a value by fields
+        with Notify("context 1") as f:
             a = sum([i for i in range(1, 101)])
-            print(a)
-            f.fields=[{"title": "result", "value": str(a)}, ]
-        with Notify("SlackNotify context 2"):
-            print(1/0)
-    except Exception:
-        print("Exception called")
-    ```
+            f.fields = a
 
+        # notifying multiple values by specifying dictionary to fields
+        with Notify("context 2") as f:
+            formula = "1 + 1"
+            f.fields = {"formula": formula, "results": eval(formula)}
+
+        # notifying Exception and stop
+        try:
+            with Notify("exception in context"):
+                print(1 / 0)
+        except ZeroDivisionError:
+            print("Exception called")
+
+        # notifying Exception and continue by catch_exception
+        with Notify("catch exception", catch_exception=(ZeroDivisionError,)) as f:
+            print(1 / 0)
+
+        ```
 
     - Decorator
 
-    ``` python
-    from slack_notipy import context_wrapper
+        ``` python
+        from slack_notipy import context_wrapper
 
-    @context_wrapper(name="context_wrapper")
-    def calc(a, b):
-        c = a/b
-        return c
-    try:
-        d = calc(1, 1)
-        d = calc(1, 0)
-    except Exception:
-        print("Exception called")
-    ```
+        # using decorator to notify return value and duration
+        @context_wrapper(name="calc with context wrapper")
+        def calc(a, b):
+            """
+            example calculation
+            """
+            return a + b
+
+        c = calc(1, 1)
+
+        try:
+            d = calc(1, 0)
+        except ZeroDivisionError:
+            print("Exception called")
+        ```
+
+    - CLI
+
+        ``` bash
+        slack_notipy -h
+        # usage: slack_notipy [-h] [--name NAME] [--title TITLE] [--message_type MESSAGE_TYPE] [--color COLOR] [--footer FOOTER] message
+        # 
+        # Sending decorated notifications using Slack Incoming Webhook from Python3
+        # 
+        # positional arguments:
+        #   message               message to send
+        # 
+        # options:
+        #   -h, --help            show this help message and exit
+        #   --name NAME           name of sender, default: slack_notipy:cli
+        #   --title TITLE         title, default: default name corresponding to message type
+        #   --message_type MESSAGE_TYPE
+        #                         message type, default: info
+        #   --color COLOR         color, default: default color scheme corresponding to message type
+        #   --footer FOOTER       footer, default: slack_notipy:cli on [HOSTNAME]
+        slack_notipy "test notification"
+        ```
 
 ## Licence
 [MIT](https://opensource.org/licenses/mit-license.php)
