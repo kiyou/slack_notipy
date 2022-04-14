@@ -36,7 +36,7 @@ def get_slack_webhook_url(env_slack_webhook_url="SLACK_WEBHOOK_URL"):
     return slack_webhook_url
 
 
-def notify(message, message_type="info", name="python", fields=None, title=None, color=None, footer=None, include_priority=False):
+def notify(message, message_type="info", name="python", fields=None, title=None, color=None, footer=None, include_priority=False, ignore_url_error=True):
     """
     Notify a message
 
@@ -66,6 +66,9 @@ def notify(message, message_type="info", name="python", fields=None, title=None,
     include_priority : bool
         priority, default False
 
+    ignore_url_error : bool
+        whether to ignore an Error during sending a message, default True
+
     returns
     ------
     None : None
@@ -90,7 +93,10 @@ def notify(message, message_type="info", name="python", fields=None, title=None,
         req = Request(url=url, data=json_data, headers=request_headers, method='POST')
         urlopen(req, timeout=config_dict["timeout"])
     except URLError as url_error:
-        raise RuntimeError('Could not reach slack server') from url_error
+        if ignore_url_error:
+            print('Could not reach the slack server, but do not raise an Error since ignore_url_error = TRUE. Please check the SLACK_WEB_HOOK_URL and the network connection later.')
+        else:
+            raise RuntimeError('Could not reach slack server. Please check the SLACK_WEB_HOOK_URL and the network connection.') from url_error
 
 
 def make_message(text, message_type="info", name="python", fields=None, title=None, color=None, footer=None, include_priority=False):
