@@ -216,7 +216,7 @@ class Notify():
             self.fields += [
                 {
                     "title": "Duration",
-                    "value": str(self.end_time - self.start_time),
+                    "value": format_duration(self.end_time - self.start_time),
                     "short": "true"
                 },
             ]
@@ -302,6 +302,35 @@ def cli():
         footer=args.footer,
         include_priority=False,
     )
+
+
+def format_duration(dt, length=2):
+    '''
+    format a datetime.timedelta object into an easily-readable string object
+
+    parameters
+    ------
+    dt : datetime.timedela
+        input timedelta
+
+    length : int
+        length used for output, default 2
+
+    returns
+    ------
+    formatted_string : str
+        formatted string
+    '''
+    second = int(dt.total_seconds() % 60)
+    minute = int(dt.total_seconds() // 60)
+    minute = minute % 60
+    hour = minute // 60
+    day = hour // 24
+    hour = hour % 24
+    microseconds = dt.microseconds / 1000.
+    time_list = [day, hour, minute, second, microseconds]
+    time_all = [f"{d}{label}" for d, label in zip(time_list, ["d", "h", "m", "s", "ms"]) if d!=0]
+    return " ".join(time_all[:min(length, len(time_all))])
 
 
 if __name__ == "__main__":
